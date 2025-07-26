@@ -5,7 +5,10 @@ import (
 	"errors"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
+
+	"github.com/hdevillers/go-seq/seqio"
 )
 
 /*
@@ -82,13 +85,43 @@ func (gsk *GeSynteK) LoadGFF(gff string) error {
 				return errors.New("failed to retrieve locus name in the GFF file")
 			}
 
+			// Convert location into integer
+			start, err := strconv.Atoi(elem[3])
+			if err != nil {
+				return err
+			}
+			end, err := strconv.Atoi(elem[4])
+			if err != nil {
+				return err
+			}
+
 			// Create a locus and append
-			gsk.Loci = append(gsk.Loci, *NewLocus(elem[0], ln[1], elem[3], elem[4], elem[6]))
+			gsk.Loci = append(gsk.Loci, *NewLocus(elem[0], ln[1], start, end, elem[6]))
 			gsk.SeqIdLoci[elem[0]] = append(gsk.SeqIdLoci[elem[0]], iloc)
 			iloc++
 		} // Else, do nothing
 	}
 
 	// Return no error
+	return nil
+}
+
+// Load up and down stream sequences
+func (gsk *GeSynteK) LoadFasta(fasta string) error {
+	// Open the fasta file
+	seqIn := seqio.NewReader(fasta, "fasta", false)
+	seqIn.CheckPanic()
+	defer seqIn.Close()
+
+	for seqIn.Next() {
+		seqIn.CheckPanic()
+		seq := seqIn.Seq()
+
+		if inds, ok := gsk.SeqIdLoci[seq.Id]; ok {
+			for i := 0; i < len(inds); i++ {
+				gsk.Loci[inds[i]].ExtractUpDownSequence(&seq, gsk.WindowLen)
+			}
+		}
+	}
 	return nil
 }

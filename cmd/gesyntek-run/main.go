@@ -11,6 +11,7 @@ func main() {
 	gff := flag.String("gff", "", "GFF input file (loci description).")
 	gffTarget := flag.String("gff-target", gesyntek.GFF_TARGET, "GFF feature type to target.")
 	gffID := flag.String("gff-id", gesyntek.GFF_ID, "GFF description flag to define the locus ID.")
+	fasta := flag.String("fasta", "", "Input Fasta file(s).")
 	kmerLen := flag.Int("kmer-length", gesyntek.KMER_LEN, "Kmer length to consider.")
 	windowLen := flag.Int("window-length", gesyntek.WINDOW_LEN, "Window length around loci.")
 
@@ -18,6 +19,10 @@ func main() {
 
 	if *gff == "" {
 		panic("You must provide an input GFF file.")
+	}
+
+	if *fasta == "" {
+		panic("You must provide an input Fasta file.")
 	}
 
 	// Initialize the structure
@@ -29,12 +34,21 @@ func main() {
 		panic(err)
 	}
 
-	for i := 0; i < len(gsk.Loci); i++ {
+	// Extract the up and down stream sequences of each locus
+	err = gsk.LoadFasta(*fasta)
+	if err != nil {
+		panic(err)
+	}
+
+	/*for i := 0; i < len(gsk.Loci); i++ {
 		fmt.Println(gsk.Loci[i].SeqId)
 		fmt.Println(gsk.Loci[i].SeqStart)
 		fmt.Println(gsk.Loci[i].SeqEnd)
 		fmt.Println(gsk.Loci[i].SeqStrand)
 		fmt.Println(gsk.Loci[i].SeqLabel)
 		fmt.Println(gsk.SeqIdLoci[gsk.Loci[i].SeqId])
-	}
+	}*/
+
+	fmt.Println(gsk.Loci[0].SeqDownStr.Id)
+	fmt.Println(string(gsk.Loci[0].SeqDownStr.Sequence[0:30]))
 }
