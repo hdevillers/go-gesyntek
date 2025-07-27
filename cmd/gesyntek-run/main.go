@@ -40,15 +40,14 @@ func main() {
 		panic(err)
 	}
 
-	/*for i := 0; i < len(gsk.Loci); i++ {
-		fmt.Println(gsk.Loci[i].SeqId)
-		fmt.Println(gsk.Loci[i].SeqStart)
-		fmt.Println(gsk.Loci[i].SeqEnd)
-		fmt.Println(gsk.Loci[i].SeqStrand)
-		fmt.Println(gsk.Loci[i].SeqLabel)
-		fmt.Println(gsk.SeqIdLoci[gsk.Loci[i].SeqId])
-	}*/
+	// Count Kmers in up and down stream sequences
+	err = gsk.CountKmers()
+	if err != nil {
+		panic(err)
+	}
 
-	fmt.Println(gsk.Loci[0].SeqDownStr.Id)
-	fmt.Println(string(gsk.Loci[0].SeqDownStr.Sequence[0:30]))
+	tmp := gsk.Loci[0].KmerUpStr.GetCounts()
+	for i := range 64 {
+		fmt.Println((*tmp)[i])
+	}
 }

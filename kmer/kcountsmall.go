@@ -9,6 +9,7 @@ type KCountSmall struct {
 	Convert   []uint32
 	Fwd       uint32
 	Bwd       uint32
+	Kmers     []uint32
 	Counts    []uint32
 	SkipDeg   int
 	SkipShort int
@@ -17,12 +18,15 @@ type KCountSmall struct {
 func NewKCountSmall(K int) *KCountSmall {
 	var kcs KCountSmall
 
+	nKmers := int(math.Pow(4.0, float64(K)))
+
 	kcs.K = K
 	kcs.Fwd = uint32((16 - K + 1) * 2)
 	kcs.Bwd = uint32((16 - K) * 2)
 	kcs.SkipDeg = 0
 	kcs.SkipShort = 0
-	kcs.Counts = make([]uint32, int(math.Pow(4.0, float64(K))))
+	kcs.Counts = make([]uint32, nKmers)
+	kcs.Kmers = make([]uint32, nKmers)
 	kcs.Convert = make([]uint32, 256)
 
 	// Set up conversion
@@ -32,6 +36,11 @@ func NewKCountSmall(K int) *KCountSmall {
 	kcs.Convert['g'] = uint32(2)
 	kcs.Convert['T'] = uint32(3)
 	kcs.Convert['t'] = uint32(3)
+
+	// Set Kmers
+	for i := range nKmers {
+		kcs.Kmers[i] = uint32(i)
+	}
 
 	return &kcs
 }
@@ -79,4 +88,16 @@ func (kcs *KCountSmall) GetSkippedTooShortBases() int {
 
 func (kcs *KCountSmall) GetSkippedBases() int {
 	return kcs.SkipDeg + kcs.SkipShort
+}
+
+func (kcs *KCountSmall) GetKmers() *[]uint32 {
+	return &kcs.Kmers
+}
+
+func (kcs *KCountSmall) GetCounts() *[]uint32 {
+	return &kcs.Counts
+}
+
+func (kcs *KCountSmall) NeedToMerge() bool {
+	return false
 }

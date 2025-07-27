@@ -12,4 +12,7 @@ type KCount interface {
 	GetSkippedBases() int
 	GetSkippedDegeneratedBases() int
 	GetSkippedTooShortBases() int
+	GetCounts() *[]uint32
+	GetKmers() *[]uint32
+	NeedToMerge() bool
 }
