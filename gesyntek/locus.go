@@ -1,8 +1,10 @@
 package gesyntek
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/hdevillers/go-gesyntek/kmer"
 	"github.com/hdevillers/go-seq/seq"
 )
 
@@ -12,15 +14,17 @@ import (
 
 // Structure
 type Locus struct {
-	SeqId      string
-	SeqLabel   string
-	SeqStart   int
-	SeqEnd     int
-	SeqStrand  string
-	SeqUpStr   seq.Seq
-	SeqDownStr seq.Seq
-	HasUpStr   bool
-	HasDownStr bool
+	SeqId       string
+	SeqLabel    string
+	SeqStart    int
+	SeqEnd      int
+	SeqStrand   string
+	SeqUpStr    seq.Seq
+	SeqDownStr  seq.Seq
+	HasUpStr    bool
+	HasDownStr  bool
+	KmerUpStr   kmer.KCount
+	KmerDownStr kmer.KCount
 }
 
 // Constructor
@@ -98,5 +102,31 @@ func (locus *Locus) ExtractUpDownSequence(s *seq.Seq, w int) error {
 			locus.SeqUpStr = seq.Seq{Id: id, Sequence: rightDNArc}
 		}
 	} // Else nothing...
+	return nil
+}
+
+// Run Kmer counts
+func (locus *Locus) CountUpDownKmers(K int) error {
+	if K <= kmer.MaxKSmall {
+		locus.KmerUpStr = kmer.NewKCountSmall(K)
+		locus.KmerDownStr = kmer.NewKCountSmall(K)
+	} else {
+		return errors.New("value of K is too high (not supported yet)")
+	}
+
+	// Run counting
+	if locus.HasUpStr {
+		err := locus.KmerUpStr.Count(&locus.SeqUpStr.Sequence)
+		if err != nil {
+			return err
+		}
+	}
+	if locus.HasDownStr {
+		err := locus.KmerDownStr.Count(&locus.SeqDownStr.Sequence)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

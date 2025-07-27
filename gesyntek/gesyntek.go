@@ -125,3 +125,14 @@ func (gsk *GeSynteK) LoadFasta(fasta string) error {
 	}
 	return nil
 }
+
+// Count Kmers in up and down stream sequences
+func (gsk *GeSynteK) CountKmers() error {
+	for i := range len(gsk.Loci) {
+		err := gsk.Loci[i].CountUpDownKmers(gsk.KmerLen)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
