@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hdevillers/go-gesyntek/kmer"
 	"github.com/hdevillers/go-seq/seqio"
 )
 
@@ -25,16 +26,20 @@ const (
 
 // Structure
 type GeSynteK struct {
-	WindowLen int
-	KmerLen   int
-	Loci      []Locus
-	SeqIdLoci map[string][]int
-	GffTarget string
-	GffId     string
+	WindowLen  int
+	KmerLen    int
+	Loci       []Locus
+	SeqIdLoci  map[string][]int
+	GffTarget  string
+	GffId      string
+	DistCpt    kmer.KDist
+	DistMethod string
+	DistValues [][]float64
+	DistMap    [][]int
 }
 
 // Init. GeSynteK object
-func NewGeSynteK(w int, k int, t string, i string) *GeSynteK {
+func NewGeSynteK(w int, k int, t string, i string, m string) *GeSynteK {
 	var gsk GeSynteK
 
 	// Initialize arguments
@@ -44,6 +49,7 @@ func NewGeSynteK(w int, k int, t string, i string) *GeSynteK {
 	gsk.SeqIdLoci = make(map[string][]int)
 	gsk.GffTarget = t
 	gsk.GffId = i
+	gsk.DistMethod = m
 
 	return &gsk
 }
@@ -134,5 +140,56 @@ func (gsk *GeSynteK) CountKmers() error {
 			return err
 		}
 	}
+	return nil
+}
+
+// TODO: merging method if require to do a global merging procedure
+
+// Compute Kmers distance
+func (gsk *GeSynteK) ComputeKmerDistance() error {
+	// Initialize distance computing class according to method
+	if gsk.DistMethod == "Euclidean" {
+		gsk.DistCpt = kmer.NewKDistEuclidean()
+	} else {
+		return errors.New("unsupported kmer distance method")
+	}
+
+	// Initialize distance attributes
+	nLoci := len(gsk.Loci)
+	nDist := (nLoci * (nLoci - 1)) / 2
+	iMax := nLoci - 1
+	jMin := 1
+	if gsk.DistCpt.NeedSelfComparison() {
+		nDist = nDist + nLoci
+		iMax = nLoci
+		jMin = 0
+	}
+	gsk.DistValues = make([][]float64, nDist)
+	gsk.DistMap = make([][]int, nDist)
+
+	// Set up
+	z := 0
+	for i := 0; i < iMax; i++ {
+		for j := i + jMin; j < nLoci; j++ {
+			gsk.DistValues[z] = make([]float64, 2)
+			gsk.DistMap[z] = make([]int, 2)
+			gsk.DistMap[z][0] = i
+			gsk.DistMap[z][1] = j
+			// Compute up-stream kmer distance
+			err := gsk.DistCpt.Compute(gsk.Loci[i].KmerUpStr.GetCounts(), gsk.Loci[j].KmerUpStr.GetCounts())
+			if err != nil {
+				return err
+			}
+			gsk.DistValues[z][0] = gsk.DistCpt.GetDistance()
+			// Compute down-stream kmer distance
+			err = gsk.DistCpt.Compute(gsk.Loci[i].KmerDownStr.GetCounts(), gsk.Loci[j].KmerDownStr.GetCounts())
+			if err != nil {
+				return err
+			}
+			gsk.DistValues[z][1] = gsk.DistCpt.GetDistance()
+			z++
+		}
+	}
+
 	return nil
 }

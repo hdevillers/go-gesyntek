@@ -101,3 +101,7 @@ func (kcs *KCountSmall) GetCounts() *[]uint32 {
 func (kcs *KCountSmall) NeedToMerge() bool {
 	return false
 }
+
+func (ksc *KCountSmall) GetNKmers() int {
+	return len(ksc.Kmers)
+}

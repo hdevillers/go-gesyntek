@@ -14,6 +14,7 @@ func main() {
 	fasta := flag.String("fasta", "", "Input Fasta file(s).")
 	kmerLen := flag.Int("kmer-length", gesyntek.KMER_LEN, "Kmer length to consider.")
 	windowLen := flag.Int("window-length", gesyntek.WINDOW_LEN, "Window length around loci.")
+	distMethod := flag.String("dist-method", "Euclidean", "Kmer distance method.")
 
 	flag.Parse()
 
@@ -26,7 +27,7 @@ func main() {
 	}
 
 	// Initialize the structure
-	gsk := gesyntek.NewGeSynteK(*windowLen, *kmerLen, *gffTarget, *gffID)
+	gsk := gesyntek.NewGeSynteK(*windowLen, *kmerLen, *gffTarget, *gffID, *distMethod)
 
 	// Load the GFF file
 	err := gsk.LoadGFF(*gff)
@@ -46,8 +47,20 @@ func main() {
 		panic(err)
 	}
 
-	tmp := gsk.Loci[0].KmerUpStr.GetCounts()
-	for i := range 64 {
-		fmt.Println((*tmp)[i])
+	// Compute all pairwise distances
+	err = gsk.ComputeKmerDistance()
+	if err != nil {
+		panic(err)
 	}
+
+	for i := range len(gsk.DistValues) {
+		fmt.Printf("Comparison of %s and %s:\n", gsk.Loci[gsk.DistMap[i][0]].SeqLabel, gsk.Loci[gsk.DistMap[i][1]].SeqLabel)
+		fmt.Printf("    Up-stream distance: %.04f\n", gsk.DistValues[i][0])
+		fmt.Printf("    Down-stream distance: %.04f\n", gsk.DistValues[i][1])
+	}
+
+	/*for i := range 64 {
+		fmt.Printf("Comptage Up G2 G5: %d\t%d\n", (*gsk.Loci[1].KmerUpStr.GetCounts())[i], (*gsk.Loci[4].KmerUpStr.GetCounts())[i])
+		fmt.Printf("Comptage Down G2 G5: %d\t%d\n", (*gsk.Loci[1].KmerDownStr.GetCounts())[i], (*gsk.Loci[4].KmerDownStr.GetCounts())[i])
+	}*/
 }

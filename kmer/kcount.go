@@ -14,5 +14,6 @@ type KCount interface {
 	GetSkippedTooShortBases() int
 	GetCounts() *[]uint32
 	GetKmers() *[]uint32
+	GetNKmers() int
 	NeedToMerge() bool
 }
