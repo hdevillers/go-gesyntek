@@ -1,5 +1,7 @@
 package kmer
 
+import "gonum.org/v1/gonum/mat"
+
 const (
 	MaxKSmall    int = 10
 	MaxK32Bits   int = 15
@@ -12,7 +14,7 @@ type KCount interface {
 	GetSkippedBases() int
 	GetSkippedDegeneratedBases() int
 	GetSkippedTooShortBases() int
-	GetCounts() *[]uint32
+	GetCounts() *mat.Dense
 	GetKmers() *[]uint32
 	GetNKmers() int
 	NeedToMerge() bool

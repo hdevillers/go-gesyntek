@@ -17,35 +17,27 @@ func NewKDistEuclidean() *KDistEuclidean {
 	return &kde
 }
 
-func (kde *KDistEuclidean) Compute(a *[]uint32, b *[]uint32) error {
-	aLen := len(*a)
-	bLen := len(*b)
+func (kde *KDistEuclidean) Compute(a *mat.Dense, b *mat.Dense) error {
+	aLen, _ := (*a).Dims()
+	bLen, _ := (*b).Dims()
 	if aLen != bLen {
 		return errors.New("cannot compare vectors of kmer counts with different lengths")
 	}
 
-	tmp1 := make([]float64, aLen)
-	for i := range aLen {
-		tmp1[i] = float64((*a)[i])
-	}
-	va := mat.NewDense(aLen, 1, tmp1)
-
-	tmp2 := make([]float64, bLen)
-	for i := range aLen {
-		tmp2[i] = float64((*b)[i])
-	}
-	vb := mat.NewDense(bLen, 1, tmp2)
-
+	// Compute the differences
 	sub1 := mat.NewDense(1, 1, nil)
 	sub1.Reset()
-	sub1.Sub(va, vb)
+	sub1.Sub(a, b)
 
+	// Compute the square
 	sub2 := mat.NewDense(1, 1, nil)
 	sub2.Reset()
 	sub2.MulElem(sub1, sub1)
 
+	// Compute the sum
 	tot1 := mat.Sum(sub2)
 
+	// Compute the square root
 	kde.Dist = math.Sqrt(tot1)
 
 	return (nil)

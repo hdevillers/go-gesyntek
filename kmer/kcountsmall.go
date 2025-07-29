@@ -2,6 +2,8 @@ package kmer
 
 import (
 	"math"
+
+	"gonum.org/v1/gonum/mat"
 )
 
 type KCountSmall struct {
@@ -10,7 +12,7 @@ type KCountSmall struct {
 	Fwd       uint32
 	Bwd       uint32
 	Kmers     []uint32
-	Counts    []uint32
+	Counts    mat.Dense
 	SkipDeg   int
 	SkipShort int
 }
@@ -25,7 +27,7 @@ func NewKCountSmall(K int) *KCountSmall {
 	kcs.Bwd = uint32((16 - K) * 2)
 	kcs.SkipDeg = 0
 	kcs.SkipShort = 0
-	kcs.Counts = make([]uint32, nKmers)
+	kcs.Counts = *mat.NewDense(nKmers, 1, nil)
 	kcs.Kmers = make([]uint32, nKmers)
 	kcs.Convert = make([]uint32, 256)
 
@@ -57,6 +59,9 @@ func (kcs *KCountSmall) Count(seq *[]byte) error {
 	kcs.SkipDeg = seqSpl.NSkipped
 	kcs.SkipShort = seqSpl.NTooShort
 
+	// Init. count variable
+	cnt := make([]float64, len(kcs.Kmers))
+
 	// Count words
 	for iSeq := range len(seqSpl.SeqSplit) {
 		// Initialize the first word
@@ -66,14 +71,17 @@ func (kcs *KCountSmall) Count(seq *[]byte) error {
 		}
 
 		// Count the first word
-		kcs.Counts[w]++
+		cnt[w]++
 
 		// Continue with the following word
 		for i := kcs.K; i < len(seqSpl.SeqSplit[iSeq]); i++ {
 			w = (w<<kcs.Fwd)>>kcs.Bwd | kcs.Convert[seqSpl.SeqSplit[iSeq][i]]
-			kcs.Counts[w]++
+			cnt[w]++
 		}
 	}
+
+	// Set the count variable
+	kcs.Counts.SetCol(0, cnt)
 
 	return nil
 }
@@ -94,7 +102,7 @@ func (kcs *KCountSmall) GetKmers() *[]uint32 {
 	return &kcs.Kmers
 }
 
-func (kcs *KCountSmall) GetCounts() *[]uint32 {
+func (kcs *KCountSmall) GetCounts() *mat.Dense {
 	return &kcs.Counts
 }
 
