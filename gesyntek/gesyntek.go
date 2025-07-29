@@ -11,6 +11,8 @@ import (
 
 	"github.com/hdevillers/go-gesyntek/kmer"
 	"github.com/hdevillers/go-seq/seqio"
+	"gonum.org/v1/gonum/mat"
+	"gonum.org/v1/gonum/stat"
 )
 
 /*
@@ -37,10 +39,11 @@ type GeSynteK struct {
 	DistMethod string
 	DistValues [][]float64
 	DistMap    [][]int
+	DistDigit  int
 }
 
 // Init. GeSynteK object
-func NewGeSynteK(w int, k int, t string, i string, m string) *GeSynteK {
+func NewGeSynteK(w int, k int, t string, i string, m string, d int) *GeSynteK {
 	var gsk GeSynteK
 
 	// Initialize arguments
@@ -51,6 +54,7 @@ func NewGeSynteK(w int, k int, t string, i string, m string) *GeSynteK {
 	gsk.GffTarget = t
 	gsk.GffId = i
 	gsk.DistMethod = m
+	gsk.DistDigit = d
 
 	return &gsk
 }
@@ -180,17 +184,25 @@ func (gsk *GeSynteK) ComputeKmerDistance() error {
 			gsk.DistMap[z][0] = i
 			gsk.DistMap[z][1] = j
 			// Compute up-stream kmer distance
-			err := gsk.DistCpt.Compute(gsk.Loci[i].KmerUpStr.GetCounts(), gsk.Loci[j].KmerUpStr.GetCounts())
-			if err != nil {
-				return err
+			if gsk.Loci[i].HasUpStr && gsk.Loci[j].HasUpStr {
+				err := gsk.DistCpt.Compute(gsk.Loci[i].KmerUpStr.GetCounts(), gsk.Loci[j].KmerUpStr.GetCounts())
+				if err != nil {
+					return err
+				}
+				gsk.DistValues[z][0] = gsk.DistCpt.GetDistance()
+			} else {
+				gsk.DistValues[z][0] = -1
 			}
-			gsk.DistValues[z][0] = gsk.DistCpt.GetDistance()
 			// Compute down-stream kmer distance
-			err = gsk.DistCpt.Compute(gsk.Loci[i].KmerDownStr.GetCounts(), gsk.Loci[j].KmerDownStr.GetCounts())
-			if err != nil {
-				return err
+			if gsk.Loci[i].HasDownStr && gsk.Loci[j].HasDownStr {
+				err := gsk.DistCpt.Compute(gsk.Loci[i].KmerDownStr.GetCounts(), gsk.Loci[j].KmerDownStr.GetCounts())
+				if err != nil {
+					return err
+				}
+				gsk.DistValues[z][1] = gsk.DistCpt.GetDistance()
+			} else {
+				gsk.DistValues[z][1] = -1
 			}
-			gsk.DistValues[z][1] = gsk.DistCpt.GetDistance()
 			z++
 		}
 	}
@@ -227,12 +239,50 @@ func (gsk *GeSynteK) WritePairwiseDistance(ob string) error {
 
 	fw := bufio.NewWriter(f)
 
+	fs := "%.0" + fmt.Sprint(gsk.DistDigit) + "f"
+
 	fw.WriteString("First.Locus\tSecond.Locus\tUpstream.Distance\tDownstream.Distance\n")
 	for i := range len(gsk.DistValues) {
-		fmt.Fprintf(fw, "%s\t%s\t%.04f\t%.04f\n", gsk.Loci[gsk.DistMap[i][0]].SeqLabel,
-			gsk.Loci[gsk.DistMap[i][1]].SeqLabel, gsk.DistValues[i][0], gsk.DistValues[i][1])
+		c1 := "NA"
+		if gsk.DistValues[i][0] > -0.5 {
+			c1 = fmt.Sprintf(fs, gsk.DistValues[i][0])
+		}
+		c2 := "NA"
+		if gsk.DistValues[i][1] > -0.5 {
+			c2 = fmt.Sprintf(fs, gsk.DistValues[i][1])
+		}
+		fmt.Fprintf(fw, "%s\t%s\t%s\t%s\n", gsk.Loci[gsk.DistMap[i][0]].SeqLabel,
+			gsk.Loci[gsk.DistMap[i][1]].SeqLabel, c1, c2)
 	}
 	fw.Flush()
 
 	return nil
+}
+
+// Internal function to standardize counts
+func standardize(a *mat.Dense) {
+	// Extract count values into a float64
+	cnt := mat.Col(nil, 0, a)
+
+	// Get mean and sd
+	mean, sd := stat.MeanStdDev(cnt, nil)
+
+	for i := range len(cnt) {
+		cnt[i] = (cnt[i] - mean) / sd
+	}
+
+	//a.Reset()
+	a.SetCol(0, cnt)
+}
+
+// Standardize counts
+func (gsk *GeSynteK) StandardizeCounts() {
+	for i := range len(gsk.Loci) {
+		if gsk.Loci[i].HasUpStr {
+			standardize(gsk.Loci[i].KmerUpStr.GetCounts())
+		}
+		if gsk.Loci[i].HasDownStr {
+			standardize(gsk.Loci[i].KmerDownStr.GetCounts())
+		}
+	}
 }
