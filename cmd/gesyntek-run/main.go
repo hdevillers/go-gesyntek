@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/hdevillers/go-gesyntek/gesyntek"
 )
@@ -60,16 +59,9 @@ func main() {
 		gsk.WriteUpDownFasta(*baseOutput)
 	}
 
-	for i := range len(gsk.Loci) {
-		fmt.Printf("In locus %s found:\n", gsk.Loci[i].SeqLabel)
-		fmt.Printf("    %d skipped base in up-stream,\n", gsk.Loci[i].KmerUpStr.GetSkippedBases())
-		fmt.Printf("    %d skipped base in down-stream.\n", gsk.Loci[i].KmerDownStr.GetSkippedBases())
+	// Save up/downstream distance for each pair of Loci
+	err = gsk.WritePairwiseDistance(*baseOutput)
+	if err != nil {
+		panic(err)
 	}
-
-	for i := range len(gsk.DistValues) {
-		fmt.Printf("Comparison of %s and %s:\n", gsk.Loci[gsk.DistMap[i][0]].SeqLabel, gsk.Loci[gsk.DistMap[i][1]].SeqLabel)
-		fmt.Printf("    Up-stream distance: %.04f\n", gsk.DistValues[i][0])
-		fmt.Printf("    Down-stream distance: %.04f\n", gsk.DistValues[i][1])
-	}
-
 }

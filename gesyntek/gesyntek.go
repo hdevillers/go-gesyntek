@@ -3,6 +3,7 @@ package gesyntek
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -212,6 +213,26 @@ func (gsk *GeSynteK) WriteUpDownFasta(ob string) error {
 			doOut.Write(gsk.Loci[i].SeqDownStr)
 		}
 	}
+
+	return nil
+}
+
+// Write out distance between each pair of Loci
+func (gsk *GeSynteK) WritePairwiseDistance(ob string) error {
+	f, err := os.Create(ob + "_Pairwise_" + gsk.DistMethod + ".tsv")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	fw := bufio.NewWriter(f)
+
+	fw.WriteString("First.Locus\tSecond.Locus\tUpstream.Distance\tDownstream.Distance\n")
+	for i := range len(gsk.DistValues) {
+		fmt.Fprintf(fw, "%s\t%s\t%.04f\t%.04f\n", gsk.Loci[gsk.DistMap[i][0]].SeqLabel,
+			gsk.Loci[gsk.DistMap[i][1]].SeqLabel, gsk.DistValues[i][0], gsk.DistValues[i][1])
+	}
+	fw.Flush()
 
 	return nil
 }
