@@ -24,21 +24,20 @@ func (kde *KDistCosine) Compute(a *mat.Dense, b *mat.Dense) error {
 		return errors.New("cannot compare vectors of kmer counts with different lengths")
 	}
 
-	// Compute the differences
 	sub1 := mat.NewDense(1, 1, nil)
 	sub1.Reset()
-	sub1.Sub(a, b)
+	sub1.MulElem(a, b)
+	sumXY := mat.Sum(sub1)
 
-	// Compute the square
-	sub2 := mat.NewDense(1, 1, nil)
-	sub2.Reset()
-	sub2.MulElem(sub1, sub1)
+	sub1.Reset()
+	sub1.MulElem(a, a)
+	sumX := math.Sqrt(mat.Sum(sub1))
 
-	// Compute the sum
-	tot1 := mat.Sum(sub2)
+	sub1.Reset()
+	sub1.MulElem(b, b)
+	sumY := math.Sqrt(mat.Sum(sub1))
 
-	// Compute the square root
-	kde.Dist = math.Sqrt(tot1)
+	kde.Dist = 1 - (sumXY / (sumX * sumY))
 
 	return (nil)
 }

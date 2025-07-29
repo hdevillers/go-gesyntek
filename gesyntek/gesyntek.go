@@ -148,9 +148,12 @@ func (gsk *GeSynteK) CountKmers() error {
 // Compute Kmers distance
 func (gsk *GeSynteK) ComputeKmerDistance() error {
 	// Initialize distance computing class according to method
-	if gsk.DistMethod == "Euclidean" {
+	switch gsk.DistMethod {
+	case "Euclidean":
 		gsk.DistCpt = kmer.NewKDistEuclidean()
-	} else {
+	case "Cosine":
+		gsk.DistCpt = kmer.NewKDistCosine()
+	default:
 		return errors.New("unsupported kmer distance method")
 	}
 
