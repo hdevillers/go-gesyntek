@@ -78,7 +78,7 @@ func (locus *Locus) ExtractUpDownSequence(s *seq.Seq, w int) error {
 	if locus.SeqEnd+w < s.Length() {
 		rightDNA := make([]byte, w)
 		from := locus.SeqEnd
-		to := from + w - 1
+		to := from + w
 		copy(rightDNA, s.Sequence[from:to])
 
 		if locus.SeqStrand == "+" {
