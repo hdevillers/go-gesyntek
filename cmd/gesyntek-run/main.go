@@ -15,6 +15,8 @@ func main() {
 	kmerLen := flag.Int("kmer-length", gesyntek.KMER_LEN, "Kmer length to consider.")
 	windowLen := flag.Int("window-length", gesyntek.WINDOW_LEN, "Window length around loci.")
 	distMethod := flag.String("dist-method", "Euclidean", "Kmer distance method.")
+	writeFasta := flag.Bool("write-fasta", false, "Write out up and down stream sequence of each loci as Fasta files.")
+	baseOutput := flag.String("output-base", "GeSynteK_output", "Output base path.")
 
 	flag.Parse()
 
@@ -53,14 +55,21 @@ func main() {
 		panic(err)
 	}
 
+	// Save up and down stream sequences if required
+	if *writeFasta {
+		gsk.WriteUpDownFasta(*baseOutput)
+	}
+
+	for i := range len(gsk.Loci) {
+		fmt.Printf("In locus %s found:\n", gsk.Loci[i].SeqLabel)
+		fmt.Printf("    %d skipped base in up-stream,\n", gsk.Loci[i].KmerUpStr.GetSkippedBases())
+		fmt.Printf("    %d skipped base in down-stream.\n", gsk.Loci[i].KmerDownStr.GetSkippedBases())
+	}
+
 	for i := range len(gsk.DistValues) {
 		fmt.Printf("Comparison of %s and %s:\n", gsk.Loci[gsk.DistMap[i][0]].SeqLabel, gsk.Loci[gsk.DistMap[i][1]].SeqLabel)
 		fmt.Printf("    Up-stream distance: %.04f\n", gsk.DistValues[i][0])
 		fmt.Printf("    Down-stream distance: %.04f\n", gsk.DistValues[i][1])
 	}
 
-	/*for i := range 64 {
-		fmt.Printf("Comptage Up G2 G5: %d\t%d\n", (*gsk.Loci[1].KmerUpStr.GetCounts())[i], (*gsk.Loci[4].KmerUpStr.GetCounts())[i])
-		fmt.Printf("Comptage Down G2 G5: %d\t%d\n", (*gsk.Loci[1].KmerDownStr.GetCounts())[i], (*gsk.Loci[4].KmerDownStr.GetCounts())[i])
-	}*/
 }

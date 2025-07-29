@@ -193,3 +193,22 @@ func (gsk *GeSynteK) ComputeKmerDistance() error {
 
 	return nil
 }
+
+// Write out up- and down-stream sequences
+func (gsk *GeSynteK) WriteUpDownFasta(ob string) error {
+	upOut := seqio.NewWriter(ob+"_UpStream.fasta", "fasta", false)
+	doOut := seqio.NewWriter(ob+"_DownStream.fasta", "fasta", false)
+	defer upOut.Close()
+	defer doOut.Close()
+
+	for i := range len(gsk.Loci) {
+		if gsk.Loci[i].HasUpStr {
+			upOut.Write(gsk.Loci[i].SeqUpStr)
+		}
+		if gsk.Loci[i].HasDownStr {
+			doOut.Write(gsk.Loci[i].SeqDownStr)
+		}
+	}
+
+	return nil
+}
