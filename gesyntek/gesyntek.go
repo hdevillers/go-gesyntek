@@ -383,7 +383,29 @@ func (gsk *GeSynteK) StandardizeCounts() {
 // Merge Kmer label for each counts
 func (gsk *GeSynteK) MergeKmers() error {
 	if gsk.NeedMerge {
-		// Merge kmer labels/counts
+		// First compute union of kmer labels
+		var UpLab [][]uint64
+		var DoLab [][]uint64
+		if gsk.KmerLen <= kmer.MaxK64Bits {
+			UpLab = make([][]uint64, 1)
+			UpLab[0] = make([]uint64, 0)
+			DoLab = make([][]uint64, 1)
+			DoLab[0] = make([]uint64, 0)
+		} else {
+			return errors.New("unsupported kmer value (too high) for merging")
+		}
+		kl := kmer.NewKLabel(gsk.KmerLen)
+		for i := range len(gsk.Loci) {
+			if gsk.Loci[i].HasUpStr {
+				kl.MergeUint64(&UpLab, gsk.Loci[i].KmerUpStr.GetKmers())
+			}
+			if gsk.Loci[i].HasDownStr {
+				kl.MergeUint64(&DoLab, gsk.Loci[i].KmerDownStr.GetKmers())
+			}
+		}
+
+		// Scan each counts and insert missing label (with zero-count)
+
 	}
 
 	return nil

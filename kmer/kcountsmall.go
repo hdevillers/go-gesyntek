@@ -87,6 +87,11 @@ func (kcs *KCountSmall) Count(seq *[]byte) error {
 	return nil
 }
 
+func (kcs *KCountSmall) MergeKmers(kl *[][]uint64) error {
+	// Useless function for small Kmer
+	return nil
+}
+
 func (kcs *KCountSmall) GetSkippedDegeneratedBases() int {
 	return kcs.SkipDeg
 }
