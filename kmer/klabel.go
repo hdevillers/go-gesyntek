@@ -75,9 +75,9 @@ func (kl *KLabel) MergeUint64(a *[][]uint64, b *[][]uint64) error {
 		n++
 		bi++
 	}
-	(*a)[0] = make([]uint64, n-1)
+	(*a)[0] = make([]uint64, n)
 	for i := range n {
-		(*a)[0][i] = tmp[n]
+		(*a)[0][i] = tmp[i]
 	}
 
 	return nil

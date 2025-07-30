@@ -110,6 +110,9 @@ func (locus *Locus) CountUpDownKmers(K int) error {
 	if K <= kmer.MaxKSmall {
 		locus.KmerUpStr = kmer.NewKCountSmall(K)
 		locus.KmerDownStr = kmer.NewKCountSmall(K)
+	} else if K <= kmer.MaxK64Bits {
+		locus.KmerUpStr = kmer.NewKCount31(K)
+		locus.KmerDownStr = kmer.NewKCount31(K)
 	} else {
 		return errors.New("value of K is too high (not supported yet)")
 	}

@@ -312,10 +312,19 @@ func (gsk *GeSynteK) WriteKmerCounts(ob string) error {
 	upVal = make([][]float64, nLoci)
 	doVal = make([][]float64, nLoci)
 	for i := range nLoci {
-		upVal[i] = make([]float64, nUpKmers)
-		doVal[i] = make([]float64, nDownKmers)
-		mat.Col(upVal[i], 0, gsk.Loci[i].KmerUpStr.GetCounts())
-		mat.Col(doVal[i], 0, gsk.Loci[i].KmerDownStr.GetCounts())
+		if gsk.Loci[i].HasUpStr {
+			upVal[i] = make([]float64, nUpKmers)
+			mat.Col(upVal[i], 0, gsk.Loci[i].KmerUpStr.GetCounts())
+		} else {
+			upVal[i] = make([]float64, 0)
+		}
+
+		if gsk.Loci[i].HasDownStr {
+			doVal[i] = make([]float64, nDownKmers)
+			mat.Col(doVal[i], 0, gsk.Loci[i].KmerDownStr.GetCounts())
+		} else {
+			doVal[i] = make([]float64, 0)
+		}
 	}
 
 	// Write count values
@@ -405,7 +414,20 @@ func (gsk *GeSynteK) MergeKmers() error {
 		}
 
 		// Scan each counts and insert missing label (with zero-count)
-
+		for i := range len(gsk.Loci) {
+			if gsk.Loci[i].HasUpStr {
+				err := gsk.Loci[i].KmerUpStr.MergeKmers(&UpLab)
+				if err != nil {
+					return err
+				}
+			}
+			if gsk.Loci[i].HasDownStr {
+				err := gsk.Loci[i].KmerDownStr.MergeKmers(&DoLab)
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	return nil

@@ -86,11 +86,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	/*tmp1 := gsk.Loci[0].KmerUpStr.GetCounts()
-	tmp2 := gsk.Loci[2].KmerUpStr.GetCounts()
-	dim, _ := tmp1.Dims()
-	for i := range dim {
-		fmt.Printf("%.04F\t%.04f\n", tmp1.At(i, 0), tmp2.At(i, 0))
-	}*/
 }
