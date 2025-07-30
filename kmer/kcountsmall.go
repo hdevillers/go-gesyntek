@@ -11,7 +11,7 @@ type KCountSmall struct {
 	Convert   []uint32
 	Fwd       uint32
 	Bwd       uint32
-	Kmers     []uint32
+	Kmers     [][]uint64
 	Counts    mat.Dense
 	SkipDeg   int
 	SkipShort int
@@ -28,7 +28,8 @@ func NewKCountSmall(K int) *KCountSmall {
 	kcs.SkipDeg = 0
 	kcs.SkipShort = 0
 	kcs.Counts = *mat.NewDense(nKmers, 1, nil)
-	kcs.Kmers = make([]uint32, nKmers)
+	kcs.Kmers = make([][]uint64, 1)
+	kcs.Kmers[0] = make([]uint64, nKmers)
 	kcs.Convert = make([]uint32, 256)
 
 	// Set up conversion
@@ -41,7 +42,7 @@ func NewKCountSmall(K int) *KCountSmall {
 
 	// Set Kmers
 	for i := range nKmers {
-		kcs.Kmers[i] = uint32(i)
+		kcs.Kmers[0][i] = uint64(i)
 	}
 
 	return &kcs
@@ -60,7 +61,7 @@ func (kcs *KCountSmall) Count(seq *[]byte) error {
 	kcs.SkipShort = seqSpl.NTooShort
 
 	// Init. count variable
-	cnt := make([]float64, len(kcs.Kmers))
+	cnt := make([]float64, len(kcs.Kmers[0]))
 
 	// Count words
 	for iSeq := range len(seqSpl.SeqSplit) {
@@ -98,7 +99,7 @@ func (kcs *KCountSmall) GetSkippedBases() int {
 	return kcs.SkipDeg + kcs.SkipShort
 }
 
-func (kcs *KCountSmall) GetKmers() *[]uint32 {
+func (kcs *KCountSmall) GetKmers() *[][]uint64 {
 	return &kcs.Kmers
 }
 
@@ -111,5 +112,5 @@ func (kcs *KCountSmall) NeedToMerge() bool {
 }
 
 func (ksc *KCountSmall) GetNKmers() int {
-	return len(ksc.Kmers)
+	return len(ksc.Kmers[0])
 }

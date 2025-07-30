@@ -15,7 +15,7 @@ type KCount interface {
 	GetSkippedDegeneratedBases() int
 	GetSkippedTooShortBases() int
 	GetCounts() *mat.Dense
-	GetKmers() *[]uint32
+	GetKmers() *[][]uint64
 	GetNKmers() int
 	NeedToMerge() bool
 }
