@@ -16,6 +16,7 @@ func main() {
 	distMethod := flag.String("dist-method", "Euclidean", "Kmer distance method.")
 	distDigit := flag.Int("dist-digit", 4, "Number of digits to keep to output distance values.")
 	writeFasta := flag.Bool("write-fasta", false, "Write out up and down stream sequence of each loci as Fasta files.")
+	writeKmerCounts := flag.Bool("write-counts", false, "Write out up/downstream Kmer counts in tabulated format (TSV).")
 	baseOutput := flag.String("output-base", "GeSynteK_output", "Output base path.")
 	standardize := flag.Bool("standardize", false, "Standardize kmer counts before computing distances.")
 
@@ -55,6 +56,12 @@ func main() {
 		gsk.StandardizeCounts()
 	}
 
+	// Merge counts (if necessary)
+	err = gsk.MergeKmers()
+	if err != nil {
+		panic(err)
+	}
+
 	// Compute all pairwise distances
 	err = gsk.ComputeKmerDistance()
 	if err != nil {
@@ -64,6 +71,14 @@ func main() {
 	// Save up and down stream sequences if required
 	if *writeFasta {
 		gsk.WriteUpDownFasta(*baseOutput)
+	}
+
+	// Save up/downstream kmer counts if required
+	if *writeKmerCounts {
+		err = gsk.WriteKmerCounts(*baseOutput)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// Save up/downstream distance for each pair of Loci

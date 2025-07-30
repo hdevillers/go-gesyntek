@@ -29,18 +29,19 @@ const (
 
 // Structure
 type GeSynteK struct {
-	WindowLen  int
-	KmerLen    int
-	Loci       []Locus
-	SeqIdLoci  map[string][]int
-	GffTarget  string
-	GffId      string
-	DistCpt    kmer.KDist
-	DistMethod string
-	DistValues [][]float64
-	DistMap    [][]int
-	DistDigit  int
-	NeedMerge  bool
+	WindowLen      int
+	KmerLen        int
+	Loci           []Locus
+	SeqIdLoci      map[string][]int
+	GffTarget      string
+	GffId          string
+	DistCpt        kmer.KDist
+	DistMethod     string
+	DistValues     [][]float64
+	DistMap        [][]int
+	DistDigit      int
+	NeedMerge      bool
+	IsStandardized bool
 }
 
 // Init. GeSynteK object
@@ -60,6 +61,7 @@ func NewGeSynteK(w int, k int, t string, i string, m string, d int) *GeSynteK {
 	if k > kmer.MaxKSmall {
 		gsk.NeedMerge = true
 	}
+	gsk.IsStandardized = false
 
 	return &gsk
 }
@@ -152,8 +154,6 @@ func (gsk *GeSynteK) CountKmers() error {
 	}
 	return nil
 }
-
-// TODO: merging method if require to do a global merging procedure
 
 // Compute Kmers distance
 func (gsk *GeSynteK) ComputeKmerDistance() error {
@@ -264,6 +264,93 @@ func (gsk *GeSynteK) WritePairwiseDistance(ob string) error {
 	return nil
 }
 
+func (gsk *GeSynteK) WriteKmerCounts(ob string) error {
+	// Two files, one for upstream kmers and one for downstream
+	fup, err := os.Create(ob + "_UpStream_KmerCounts.tsv")
+	if err != nil {
+		return err
+	}
+	defer fup.Close()
+	fdo, err := os.Create(ob + "_DownStream_KmerCounts.tsv")
+	if err != nil {
+		return err
+	}
+	defer fdo.Close()
+
+	fupw := bufio.NewWriter(fup)
+	fdow := bufio.NewWriter(fdo)
+
+	// Create and write the header
+	header := "Kmers"
+	nLoci := len(gsk.Loci)
+	for i := range nLoci {
+		header = header + "\t" + gsk.Loci[i].SeqLabel
+	}
+	fupw.WriteString(header + "\n")
+	fdow.WriteString(header + "\n")
+
+	// Convert kmer numerical ids (uint64) into bytes
+	kl := kmer.NewKLabel(gsk.KmerLen)
+	labUpInt := gsk.Loci[0].KmerUpStr.GetKmers()
+	labDownInt := gsk.Loci[0].KmerDownStr.GetKmers()
+	nUpKmers := len((*labUpInt)[0])
+	nDownKmers := len((*labDownInt)[0])
+	labUpByte := make([][]byte, nUpKmers)
+	labDownByte := make([][]byte, nDownKmers)
+	err = kl.Uint64ToBytes(labUpInt, &labUpByte)
+	if err != nil {
+		return err
+	}
+	err = kl.Uint64ToBytes(labDownInt, &labDownByte)
+	if err != nil {
+		return err
+	}
+
+	// Extract and copy count values into an array
+	var upVal [][]float64
+	var doVal [][]float64
+	upVal = make([][]float64, nLoci)
+	doVal = make([][]float64, nLoci)
+	for i := range nLoci {
+		upVal[i] = make([]float64, nUpKmers)
+		doVal[i] = make([]float64, nDownKmers)
+		mat.Col(upVal[i], 0, gsk.Loci[i].KmerUpStr.GetCounts())
+		mat.Col(doVal[i], 0, gsk.Loci[i].KmerDownStr.GetCounts())
+	}
+
+	// Write count values
+	numFmt := "\t%.0f"
+	if gsk.IsStandardized {
+		numFmt = "\t%.04f"
+	}
+	for i := range nUpKmers {
+		fupw.Write(labUpByte[i])
+		for j := range nLoci {
+			if gsk.Loci[j].HasUpStr {
+				fmt.Fprintf(fupw, numFmt, upVal[j][i])
+			} else {
+				fupw.WriteString("\tNA")
+			}
+		}
+		fupw.WriteByte('\n')
+	}
+	for i := range nDownKmers {
+		fdow.Write(labDownByte[i])
+		for j := range nLoci {
+			if gsk.Loci[j].HasDownStr {
+				fmt.Fprintf(fdow, numFmt, doVal[j][i])
+			} else {
+				fdow.WriteString("\tNA")
+			}
+		}
+		fdow.WriteByte('\n')
+	}
+	fupw.Flush()
+	fdow.Flush()
+
+	return nil
+}
+
 // Internal function to standardize counts
 func standardize(a *mat.Dense) {
 	// Extract count values into a float64
@@ -290,6 +377,7 @@ func (gsk *GeSynteK) StandardizeCounts() {
 			standardize(gsk.Loci[i].KmerDownStr.GetCounts())
 		}
 	}
+	gsk.IsStandardized = true
 }
 
 // Merge Kmer label for each counts
