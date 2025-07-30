@@ -40,6 +40,7 @@ type GeSynteK struct {
 	DistValues [][]float64
 	DistMap    [][]int
 	DistDigit  int
+	NeedMerge  bool
 }
 
 // Init. GeSynteK object
@@ -55,6 +56,10 @@ func NewGeSynteK(w int, k int, t string, i string, m string, d int) *GeSynteK {
 	gsk.GffId = i
 	gsk.DistMethod = m
 	gsk.DistDigit = d
+	gsk.NeedMerge = false
+	if k > kmer.MaxKSmall {
+		gsk.NeedMerge = true
+	}
 
 	return &gsk
 }
@@ -285,4 +290,13 @@ func (gsk *GeSynteK) StandardizeCounts() {
 			standardize(gsk.Loci[i].KmerDownStr.GetCounts())
 		}
 	}
+}
+
+// Merge Kmer label for each counts
+func (gsk *GeSynteK) MergeKmers() error {
+	if gsk.NeedMerge {
+		// Merge kmer labels/counts
+	}
+
+	return nil
 }

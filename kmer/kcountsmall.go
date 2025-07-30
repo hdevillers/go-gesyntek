@@ -107,10 +107,6 @@ func (kcs *KCountSmall) GetCounts() *mat.Dense {
 	return &kcs.Counts
 }
 
-func (kcs *KCountSmall) NeedToMerge() bool {
-	return false
-}
-
 func (ksc *KCountSmall) GetNKmers() int {
 	return len(ksc.Kmers[0])
 }
