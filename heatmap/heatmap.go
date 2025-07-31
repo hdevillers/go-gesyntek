@@ -254,7 +254,7 @@ func (hmd *HeatMapDistance) Plot() error {
 	pal := palette.Heat(hmd.NDiv, 1.0)
 	hea := plotter.NewHeatMap(grid, pal)
 	hea.Min = 0.0
-	hea.Max = math.Max(hmd.UpMax, hmd.DoMax)
+	hea.Max = math.Max(hmd.UpMax, hmd.DoMax) * 1.05 // Max value is ignored
 	hea.NaN = color.RGBA{150, 150, 150, 255}
 
 	// New plot, add the heatmap
