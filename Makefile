@@ -10,3 +10,11 @@ build:
 
 test:
 	go test -v kmer/ksplit.go kmer/ksplit_test.go
+
+install:
+	cp bin/gesyntek-run $(INSTALL_DIR)/gesyntek-run
+	cp bin/gesyntek-heatmap $(INSTALL_DIR)/gesyntek-heatmap
+
+uninstall:
+	rm -f $(INSTALL_DIR)/gesyntek-run
+	rm -f $(INSTALL_DIR)/gesyntek-heatmap
