@@ -68,7 +68,7 @@ func NewGeSynteK(w int, k int, t string, i string, m string, d int) *GeSynteK {
 
 // Load data from gff files
 func (gsk *GeSynteK) LoadGFF(gff string) error {
-	// Create the file hendler
+	// Create the file handler
 	fh, err := os.Open(gff)
 	if err != nil {
 		return err
