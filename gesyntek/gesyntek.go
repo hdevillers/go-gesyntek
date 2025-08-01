@@ -163,6 +163,8 @@ func (gsk *GeSynteK) ComputeKmerDistance() error {
 		gsk.DistCpt = kmer.NewKDistEuclidean()
 	case "Cosine":
 		gsk.DistCpt = kmer.NewKDistCosine()
+	case "Mash":
+		gsk.DistCpt = kmer.NewKDistMash(gsk.KmerLen)
 	default:
 		return errors.New("unsupported kmer distance method")
 	}
