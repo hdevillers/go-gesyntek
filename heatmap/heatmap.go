@@ -229,8 +229,16 @@ func (hmd *HeatMapDistance) LoadDistanceFile(fd string) error {
 	for i := range nKeys - 1 {
 		for j := i + 1; j < nKeys; j++ {
 			key := hmd.Labels[i] + hmd.Labels[j]
-			hmd.Data[i][j] = upDist[key]
-			hmd.Data[j][i] = doDist[key]
+			upVal := upDist[key]
+			doVal := doDist[key]
+			hmd.Data[i][j] = upVal
+			hmd.Data[j][i] = doVal
+			if !math.IsNaN(upVal) && upVal > hmd.UpMax {
+				hmd.UpMax = upVal
+			}
+			if !math.IsNaN(doVal) && doVal > hmd.DoMax {
+				hmd.DoMax = doVal
+			}
 		}
 	}
 	return nil
@@ -254,7 +262,7 @@ func (hmd *HeatMapDistance) Plot() error {
 	pal := palette.Heat(hmd.NDiv, 1.0)
 	hea := plotter.NewHeatMap(grid, pal)
 	hea.Min = 0.0
-	hea.Max = math.Max(hmd.UpMax, hmd.DoMax) * 1.05 // Max value is ignored
+	hea.Max = math.Max(hmd.UpMax, hmd.DoMax) //* 1.1 // Max value is ignored
 	hea.NaN = color.RGBA{150, 150, 150, 255}
 
 	// New plot, add the heatmap
