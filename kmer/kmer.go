@@ -162,7 +162,7 @@ func (km *Kmer) WriteKmerCounts(ob string) error {
 		for j := range nSeq {
 			fmt.Fprintf(fw, numFmt, cnt[j][i])
 		}
-		fw.WriteByte('\t')
+		fw.WriteByte('\n')
 	}
 	fw.Flush()
 
