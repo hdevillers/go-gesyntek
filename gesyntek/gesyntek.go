@@ -12,7 +12,6 @@ import (
 	"github.com/hdevillers/go-gesyntek/kmer"
 	"github.com/hdevillers/go-seq/seqio"
 	"gonum.org/v1/gonum/mat"
-	"gonum.org/v1/gonum/stat"
 )
 
 /*
@@ -362,30 +361,14 @@ func (gsk *GeSynteK) WriteKmerCounts(ob string) error {
 	return nil
 }
 
-// Internal function to standardize counts
-func standardize(a *mat.Dense) {
-	// Extract count values into a float64
-	cnt := mat.Col(nil, 0, a)
-
-	// Get mean and sd
-	mean, sd := stat.MeanStdDev(cnt, nil)
-
-	for i := range len(cnt) {
-		cnt[i] = (cnt[i] - mean) / sd
-	}
-
-	//a.Reset()
-	a.SetCol(0, cnt)
-}
-
 // Standardize counts
 func (gsk *GeSynteK) StandardizeCounts() {
 	for i := range len(gsk.Loci) {
 		if gsk.Loci[i].HasUpStr {
-			standardize(gsk.Loci[i].KmerUpStr.GetCounts())
+			kmer.Standardize(gsk.Loci[i].KmerUpStr.GetCounts())
 		}
 		if gsk.Loci[i].HasDownStr {
-			standardize(gsk.Loci[i].KmerDownStr.GetCounts())
+			kmer.Standardize(gsk.Loci[i].KmerDownStr.GetCounts())
 		}
 	}
 	gsk.IsStandardized = true
