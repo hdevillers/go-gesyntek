@@ -45,9 +45,9 @@ func NewKmer(k int) *Kmer {
 	return &km
 }
 
-func (km *Kmer) LoadFasta(f string) error {
+func (km *Kmer) LoadSequences(f, ff string) error {
 	// Open the fasta file
-	seqIn := seqio.NewReader(f, "fasta", false)
+	seqIn := seqio.NewReader(f, ff, false)
 	seqIn.CheckPanic()
 	defer seqIn.Close()
 
