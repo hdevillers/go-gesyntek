@@ -108,11 +108,11 @@ func (locus *Locus) ExtractUpDownSequence(s *seq.Seq, w int) error {
 // Run Kmer counts
 func (locus *Locus) CountUpDownKmers(K int) error {
 	if K <= kmer.MaxKSmall {
-		locus.KmerUpStr = kmer.NewKCountSmall(K)
-		locus.KmerDownStr = kmer.NewKCountSmall(K)
+		locus.KmerUpStr = kmer.NewKCountSmall(K, false)
+		locus.KmerDownStr = kmer.NewKCountSmall(K, false)
 	} else if K <= kmer.MaxK64Bits {
-		locus.KmerUpStr = kmer.NewKCount31(K)
-		locus.KmerDownStr = kmer.NewKCount31(K)
+		locus.KmerUpStr = kmer.NewKCount31(K, false)
+		locus.KmerDownStr = kmer.NewKCount31(K, false)
 	} else {
 		return errors.New("value of K is too high (not supported yet)")
 	}

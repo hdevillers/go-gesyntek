@@ -19,4 +19,5 @@ type KCount interface {
 	GetCounts() *mat.Dense
 	GetKmers() *[][]uint64
 	GetNKmers() int
+	IsCanonical() bool
 }

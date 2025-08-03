@@ -8,6 +8,7 @@ import (
 
 type KCount31 struct {
 	K         int
+	Canonical bool
 	Convert   []uint64
 	Fwd       uint64
 	Bwd       uint64
@@ -17,7 +18,7 @@ type KCount31 struct {
 	SkipShort int
 }
 
-func NewKCount31(K int) *KCount31 {
+func NewKCount31(K int, c bool) *KCount31 {
 	var kcs KCount31
 
 	kcs.K = K
@@ -177,6 +178,10 @@ func (kcs *KCount31) GetCounts() *mat.Dense {
 	return &kcs.Counts
 }
 
-func (ksc *KCount31) GetNKmers() int {
-	return len(ksc.Kmers[0])
+func (kcs *KCount31) GetNKmers() int {
+	return len(kcs.Kmers[0])
+}
+
+func (kcs *KCount31) IsCanonical() bool {
+	return kcs.Canonical
 }
