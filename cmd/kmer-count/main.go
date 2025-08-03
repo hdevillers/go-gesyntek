@@ -26,13 +26,14 @@ func main() {
 	outputBase := flag.String("output-base", "GeSynteK_kmer", "Output base path.")
 	kmerLen := flag.Int("kmer-length", 4, "Kmer length.")
 	standardize := flag.Bool("standardize", false, "Standardize kmer counts.")
+	canonical := flag.Bool("canonical", false, "Count canonical kmers.")
 	flag.Parse()
 
 	if len(inputs) == 0 {
 		panic("You must provide an input sequence file.")
 	}
 
-	km := kmer.NewKmer(*kmerLen)
+	km := kmer.NewKmer(*kmerLen, *canonical)
 
 	// Load sequence
 	for i := range len(inputs) {

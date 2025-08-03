@@ -29,20 +29,36 @@ func Standardize(a *mat.Dense) {
 }
 
 type Kmer struct {
-	K       int
-	Counter []KCount
-	Labels  []string
-	Dist    KDist
-	IsStd   bool
+	K         int
+	Canonical bool
+	Counter   []KCount
+	Labels    []string
+	Dist      KDist
+	IsStd     bool
+	RevComp   []byte
 }
 
-func NewKmer(k int) *Kmer {
+func NewKmer(k int, c bool) *Kmer {
 	var km Kmer
 	km.K = k
+	km.Canonical = c
 	km.Counter = make([]KCount, 0)
 	km.Labels = make([]string, 0)
 	km.IsStd = false
+	km.RevComp = make([]byte, 256)
+	km.RevComp['A'] = 'T'
+	km.RevComp['C'] = 'G'
+	km.RevComp['G'] = 'C'
+	km.RevComp['T'] = 'A'
 	return &km
+}
+
+func (km *Kmer) ByteRevComp(w []byte) []byte {
+	wrc := make([]byte, km.K)
+	for i := range km.K {
+		wrc[km.K-i-1] = km.RevComp[w[i]]
+	}
+	return wrc
 }
 
 func (km *Kmer) LoadSequences(f, ff string) error {
@@ -54,9 +70,9 @@ func (km *Kmer) LoadSequences(f, ff string) error {
 	// Add a new counter
 	ic := len(km.Counter)
 	if km.K <= MaxKSmall {
-		km.Counter = append(km.Counter, NewKCountSmall(km.K))
+		km.Counter = append(km.Counter, NewKCountSmall(km.K, km.Canonical))
 	} else if km.K <= MaxK64Bits {
-		km.Counter = append(km.Counter, NewKCount31(km.K))
+		km.Counter = append(km.Counter, NewKCount31(km.K, km.Canonical))
 	} else {
 		return errors.New("value of K is too high (maximal supported value is 31)")
 	}
@@ -157,12 +173,28 @@ func (km *Kmer) WriteKmerCounts(ob string) error {
 	if km.IsStd {
 		numFmt = "\t%.04f"
 	}
-	for i := range nKmers {
-		fw.Write(kByte[i])
-		for j := range nSeq {
-			fmt.Fprintf(fw, numFmt, cnt[j][i])
+	if km.Canonical {
+		toSkip := km.Counter[0].GetKmersToSkip()
+		for i := range nKmers {
+			if (*toSkip)[i] == uint8(0) {
+				fw.Write(kByte[i])
+				wrc := km.ByteRevComp(kByte[i])
+				fw.WriteByte('/')
+				fw.Write(wrc)
+				for j := range nSeq {
+					fmt.Fprintf(fw, numFmt, cnt[j][i])
+				}
+				fw.WriteByte('\n')
+			}
 		}
-		fw.WriteByte('\n')
+	} else {
+		for i := range nKmers {
+			fw.Write(kByte[i])
+			for j := range nSeq {
+				fmt.Fprintf(fw, numFmt, cnt[j][i])
+			}
+			fw.WriteByte('\n')
+		}
 	}
 	fw.Flush()
 

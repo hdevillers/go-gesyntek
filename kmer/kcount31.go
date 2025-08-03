@@ -185,3 +185,8 @@ func (kcs *KCount31) GetNKmers() int {
 func (kcs *KCount31) IsCanonical() bool {
 	return kcs.Canonical
 }
+
+func (kcs *KCount31) GetKmersToSkip() *[]uint8 {
+	out := make([]uint8, kcs.GetNKmers())
+	return &out
+}

@@ -9,6 +9,7 @@ import (
 type KCountSmall struct {
 	K         int
 	Canonical bool
+	ToSkip    []uint8
 	Convert   []uint32
 	RcConvert []uint32
 	Fwd       uint32
@@ -26,6 +27,7 @@ func NewKCountSmall(K int, c bool) *KCountSmall {
 
 	kcs.K = K
 	kcs.Canonical = c
+	kcs.ToSkip = make([]uint8, nKmers)
 	kcs.Fwd = uint32((16 - K + 1) * 2)
 	kcs.Bwd = uint32((16 - K) * 2)
 	kcs.SkipDeg = 0
@@ -92,8 +94,12 @@ func (kcs *KCountSmall) Count(seq *[]byte) error {
 			// Count the first word
 			if w < wrc {
 				cnt[w]++
-			} else {
+				kcs.ToSkip[wrc] = uint8(1)
+			} else if w > wrc {
 				cnt[wrc]++
+				kcs.ToSkip[w] = uint8(1)
+			} else {
+				cnt[w]++
 			}
 
 			// Continue with the following word
@@ -102,8 +108,12 @@ func (kcs *KCountSmall) Count(seq *[]byte) error {
 				wrc = (wrc >> 2) | kcs.RcConvert[seqSpl.SeqSplit[iSeq][i]]
 				if w < wrc {
 					cnt[w]++
-				} else {
+					kcs.ToSkip[wrc] = uint8(1)
+				} else if w > wrc {
 					cnt[wrc]++
+					kcs.ToSkip[w] = uint8(1)
+				} else {
+					cnt[w]++
 				}
 			}
 		}
@@ -163,4 +173,8 @@ func (kcs *KCountSmall) GetNKmers() int {
 
 func (kcs *KCountSmall) IsCanonical() bool {
 	return kcs.Canonical
+}
+
+func (kcs *KCountSmall) GetKmersToSkip() *[]uint8 {
+	return &kcs.ToSkip
 }

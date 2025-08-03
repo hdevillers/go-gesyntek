@@ -20,4 +20,5 @@ type KCount interface {
 	GetKmers() *[][]uint64
 	GetNKmers() int
 	IsCanonical() bool
+	GetKmersToSkip() *[]uint8
 }
