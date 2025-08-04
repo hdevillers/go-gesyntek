@@ -10,6 +10,7 @@ type KCount31 struct {
 	K         int
 	Canonical bool
 	Convert   []uint64
+	RcConvert []uint64
 	Fwd       uint64
 	Bwd       uint64
 	Kmers     [][]uint64
@@ -22,6 +23,7 @@ func NewKCount31(K int, c bool) *KCount31 {
 	var kcs KCount31
 
 	kcs.K = K
+	kcs.Canonical = c
 	kcs.Fwd = uint64((32 - K + 1) * 2)
 	kcs.Bwd = uint64((32 - K) * 2)
 	kcs.SkipDeg = 0
@@ -37,6 +39,18 @@ func NewKCount31(K int, c bool) *KCount31 {
 	kcs.Convert['g'] = uint64(2)
 	kcs.Convert['T'] = uint64(3)
 	kcs.Convert['t'] = uint64(3)
+
+	// Set reverse complement conversion if necessary
+	if c {
+		kcs.RcConvert = make([]uint64, 256)
+		n := 2*K - 2
+		kcs.RcConvert['C'] = uint64(2) << n
+		kcs.RcConvert['c'] = uint64(2) << n
+		kcs.RcConvert['G'] = uint64(1) << n
+		kcs.RcConvert['g'] = uint64(1) << n
+		kcs.RcConvert['A'] = uint64(3) << n
+		kcs.RcConvert['a'] = uint64(3) << n
+	}
 
 	return &kcs
 }
@@ -62,22 +76,46 @@ func (kcs *KCount31) Count(seq *[]byte) error {
 	// Enumerate kmers
 	lab := make([]uint64, nKmers)
 	iLab := 0
-	for iSeq := range len(seqSpl.SeqSplit) {
-		// Initialize the first word
-		w := uint64(0)
-		for i := 0; i < kcs.K; i++ {
-			w = (w << 2) | kcs.Convert[seqSpl.SeqSplit[iSeq][i]]
+	if kcs.Canonical {
+		for iSeq := range len(seqSpl.SeqSplit) {
+			// Initialize the first word
+			w := uint64(0)
+			wrc := uint64(0)
+			for i := 0; i < kcs.K; i++ {
+				w = (w << 2) | kcs.Convert[seqSpl.SeqSplit[iSeq][i]]
+				wrc = (wrc >> 2) | kcs.RcConvert[seqSpl.SeqSplit[iSeq][i]]
+			}
+
+			// Store the first kmer
+			lab[iLab] = min(w, wrc)
+			iLab++
+
+			// Continue with the following kmer(s)
+			for i := kcs.K; i < len(seqSpl.SeqSplit[iSeq]); i++ {
+				w = (w<<kcs.Fwd)>>kcs.Bwd | kcs.Convert[seqSpl.SeqSplit[iSeq][i]]
+				wrc = (wrc >> 2) | kcs.RcConvert[seqSpl.SeqSplit[iSeq][i]]
+				lab[iLab] = min(w, wrc)
+				iLab++
+			}
 		}
+	} else {
+		for iSeq := range len(seqSpl.SeqSplit) {
+			// Initialize the first word
+			w := uint64(0)
+			for i := 0; i < kcs.K; i++ {
+				w = (w << 2) | kcs.Convert[seqSpl.SeqSplit[iSeq][i]]
+			}
 
-		// Store the first kmer
-		lab[iLab] = w
-		iLab++
-
-		// Continue with the following kmer(s)
-		for i := kcs.K; i < len(seqSpl.SeqSplit[iSeq]); i++ {
-			w = (w<<kcs.Fwd)>>kcs.Bwd | kcs.Convert[seqSpl.SeqSplit[iSeq][i]]
+			// Store the first kmer
 			lab[iLab] = w
 			iLab++
+
+			// Continue with the following kmer(s)
+			for i := kcs.K; i < len(seqSpl.SeqSplit[iSeq]); i++ {
+				w = (w<<kcs.Fwd)>>kcs.Bwd | kcs.Convert[seqSpl.SeqSplit[iSeq][i]]
+				lab[iLab] = w
+				iLab++
+			}
 		}
 	}
 
