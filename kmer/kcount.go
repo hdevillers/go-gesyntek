@@ -5,9 +5,9 @@ import "gonum.org/v1/gonum/mat"
 const (
 	MaxKSmall    int = 8
 	MaxK32Bits   int = 15
-	MaxK64Bits   int = 31
+	MaxK64Bits   int = 32
 	MaxKPrintAll int = 10
-	MaxKAbsolute int = 31
+	MaxKAbsolute int = 32
 )
 
 type KCount interface {

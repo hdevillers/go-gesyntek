@@ -30,13 +30,13 @@ func (kl *KLabel) Uint64ToBytes(ws *[][]uint64, out *[][]byte) error {
 		return errors.New("wrong number of kmer in type conversion")
 	}
 
-	if kl.K < 32 {
+	if kl.K <= MaxK64Bits {
 		for i := range nws {
 			(*out)[i] = make([]byte, kl.K)
 			kl.ParseUint64((*ws)[0][i], &(*out)[i], kl.K, kl.K-1)
 		}
 	} else {
-		return errors.New("kmer longer than 31 bases are not supported yet")
+		return errors.New("kmer longer than 32 bases are not supported yet")
 	}
 	return nil
 }

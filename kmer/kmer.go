@@ -72,7 +72,7 @@ func (km *Kmer) LoadSequences(f, ff string) error {
 	if km.K <= MaxKSmall {
 		km.Counter = append(km.Counter, NewKCountSmall(km.K, km.Canonical))
 	} else if km.K <= MaxK64Bits {
-		km.Counter = append(km.Counter, NewKCount31(km.K, km.Canonical))
+		km.Counter = append(km.Counter, NewKCount32(km.K, km.Canonical))
 	} else {
 		return errors.New("value of K is too high (maximal supported value is 31)")
 	}

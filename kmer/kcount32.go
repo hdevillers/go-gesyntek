@@ -6,7 +6,7 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-type KCount31 struct {
+type KCount32 struct {
 	K         int
 	Canonical bool
 	Convert   []uint64
@@ -19,8 +19,8 @@ type KCount31 struct {
 	SkipShort int
 }
 
-func NewKCount31(K int, c bool) *KCount31 {
-	var kcs KCount31
+func NewKCount32(K int, c bool) *KCount32 {
+	var kcs KCount32
 
 	kcs.K = K
 	kcs.Canonical = c
@@ -55,7 +55,7 @@ func NewKCount31(K int, c bool) *KCount31 {
 	return &kcs
 }
 
-func (kcs *KCount31) Count(seq *[]byte) error {
+func (kcs *KCount32) Count(seq *[]byte) error {
 	// Split the input sequence to keep only countable words
 	seqSpl := NewKSplit(kcs.K)
 	err := seqSpl.SplitSeq(seq)
@@ -147,7 +147,7 @@ func (kcs *KCount31) Count(seq *[]byte) error {
 	return nil
 }
 
-func (kcs *KCount31) MergeKmers(kl *[][]uint64) error {
+func (kcs *KCount32) MergeKmers(kl *[][]uint64) error {
 	nIn := len(kcs.Kmers[0])
 	nOut := len((*kl)[0])
 	tmpLab := make([]uint64, nIn+nOut)
@@ -196,35 +196,35 @@ func (kcs *KCount31) MergeKmers(kl *[][]uint64) error {
 	return nil
 }
 
-func (kcs *KCount31) GetSkippedDegeneratedBases() int {
+func (kcs *KCount32) GetSkippedDegeneratedBases() int {
 	return kcs.SkipDeg
 }
 
-func (kcs *KCount31) GetSkippedTooShortBases() int {
+func (kcs *KCount32) GetSkippedTooShortBases() int {
 	return kcs.SkipShort
 }
 
-func (kcs *KCount31) GetSkippedBases() int {
+func (kcs *KCount32) GetSkippedBases() int {
 	return kcs.SkipDeg + kcs.SkipShort
 }
 
-func (kcs *KCount31) GetKmers() *[][]uint64 {
+func (kcs *KCount32) GetKmers() *[][]uint64 {
 	return &kcs.Kmers
 }
 
-func (kcs *KCount31) GetCounts() *mat.Dense {
+func (kcs *KCount32) GetCounts() *mat.Dense {
 	return &kcs.Counts
 }
 
-func (kcs *KCount31) GetNKmers() int {
+func (kcs *KCount32) GetNKmers() int {
 	return len(kcs.Kmers[0])
 }
 
-func (kcs *KCount31) IsCanonical() bool {
+func (kcs *KCount32) IsCanonical() bool {
 	return kcs.Canonical
 }
 
-func (kcs *KCount31) GetKmersToSkip() *[]uint8 {
+func (kcs *KCount32) GetKmersToSkip() *[]uint8 {
 	out := make([]uint8, kcs.GetNKmers())
 	return &out
 }
