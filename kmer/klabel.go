@@ -35,8 +35,15 @@ func (kl *KLabel) Uint64ToBytes(ws *[][]uint64, out *[][]byte) error {
 			(*out)[i] = make([]byte, kl.K)
 			kl.ParseUint64((*ws)[0][i], &(*out)[i], kl.K, kl.K-1)
 		}
+	} else if kl.K <= MaxK128Bits {
+		sub := kl.K - 32
+		for i := range nws {
+			(*out)[i] = make([]byte, kl.K)
+			kl.ParseUint64((*ws)[0][i], &(*out)[i], sub, sub-1)
+			kl.ParseUint64((*ws)[1][i], &(*out)[i], 32, kl.K-1)
+		}
 	} else {
-		return errors.New("kmer longer than 32 bases are not supported yet")
+		return errors.New("kmer longer than 64 bases are not supported yet")
 	}
 	return nil
 }
@@ -45,39 +52,99 @@ func (kl *KLabel) Uint64ToBytes(ws *[][]uint64, out *[][]byte) error {
 func (kl *KLabel) MergeUint64(a *[][]uint64, b *[][]uint64) error {
 	aLen := len((*a)[0])
 	bLen := len((*b)[0])
-	tmp := make([]uint64, aLen+bLen)
-	ai := 0
-	bi := 0
-	n := 0
-	for ai < aLen && bi < bLen {
-		if (*a)[0][ai] == (*b)[0][bi] {
+	if kl.K <= MaxK64Bits {
+		tmp := make([]uint64, aLen+bLen)
+		ai := 0
+		bi := 0
+		n := 0
+		for ai < aLen && bi < bLen {
+			if (*a)[0][ai] == (*b)[0][bi] {
+				tmp[n] = (*a)[0][ai]
+				n++
+				ai++
+				bi++
+			} else if (*a)[0][ai] < (*b)[0][bi] {
+				tmp[n] = (*a)[0][ai]
+				n++
+				ai++
+			} else {
+				tmp[n] = (*b)[0][bi]
+				n++
+				bi++
+			}
+		}
+		for ai < aLen {
 			tmp[n] = (*a)[0][ai]
 			n++
 			ai++
-			bi++
-		} else if (*a)[0][ai] < (*b)[0][bi] {
-			tmp[n] = (*a)[0][ai]
-			n++
-			ai++
-		} else {
+		}
+		for bi < bLen {
 			tmp[n] = (*b)[0][bi]
 			n++
 			bi++
 		}
-	}
-	for ai < aLen {
-		tmp[n] = (*a)[0][ai]
-		n++
-		ai++
-	}
-	for bi < bLen {
-		tmp[n] = (*b)[0][bi]
-		n++
-		bi++
-	}
-	(*a)[0] = make([]uint64, n)
-	for i := range n {
-		(*a)[0][i] = tmp[i]
+		(*a)[0] = make([]uint64, n)
+		for i := range n {
+			(*a)[0][i] = tmp[i]
+		}
+	} else if kl.K <= MaxK128Bits {
+		tmp := make([][]uint64, 2)
+		tmp[0] = make([]uint64, aLen+bLen)
+		tmp[1] = make([]uint64, aLen+bLen)
+		ai := 0
+		bi := 0
+		n := 0
+		for ai < aLen && bi < bLen {
+			if (*a)[0][ai] == (*b)[0][bi] {
+				if (*a)[1][ai] == (*b)[1][bi] {
+					tmp[0][n] = (*a)[0][ai]
+					tmp[1][n] = (*a)[1][ai]
+					n++
+					ai++
+					bi++
+				} else if (*a)[1][ai] < (*b)[1][bi] {
+					tmp[0][n] = (*a)[0][ai]
+					tmp[1][n] = (*a)[1][ai]
+					n++
+					ai++
+				} else {
+					tmp[0][n] = (*b)[0][bi]
+					tmp[1][n] = (*b)[1][bi]
+					n++
+					bi++
+				}
+			} else if (*a)[0][ai] < (*b)[0][bi] {
+				tmp[0][n] = (*a)[0][ai]
+				tmp[1][n] = (*a)[1][ai]
+				n++
+				ai++
+			} else {
+				tmp[0][n] = (*b)[0][bi]
+				tmp[1][n] = (*b)[1][bi]
+				n++
+				bi++
+			}
+		}
+		for ai < aLen {
+			tmp[0][n] = (*a)[0][ai]
+			tmp[1][n] = (*a)[1][ai]
+			n++
+			ai++
+		}
+		for bi < bLen {
+			tmp[0][n] = (*b)[0][bi]
+			tmp[1][n] = (*b)[1][bi]
+			n++
+			bi++
+		}
+		(*a)[0] = make([]uint64, n)
+		(*a)[1] = make([]uint64, n)
+		for i := range n {
+			(*a)[0][i] = tmp[0][i]
+			(*a)[1][i] = tmp[1][i]
+		}
+	} else {
+		return errors.New("kmers longer than 64 bases are not supported yet")
 	}
 
 	return nil

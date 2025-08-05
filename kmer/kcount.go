@@ -6,8 +6,9 @@ const (
 	MaxKSmall    int = 8
 	MaxK32Bits   int = 15
 	MaxK64Bits   int = 32
-	MaxKPrintAll int = 10
-	MaxKAbsolute int = 32
+	MaxK128Bits  int = 64
+	MaxKPrintAll int = 8
+	MaxKAbsolute int = 64
 )
 
 type KCount interface {

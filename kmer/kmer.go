@@ -73,8 +73,10 @@ func (km *Kmer) LoadSequences(f, ff string) error {
 		km.Counter = append(km.Counter, NewKCountSmall(km.K, km.Canonical))
 	} else if km.K <= MaxK64Bits {
 		km.Counter = append(km.Counter, NewKCount32(km.K, km.Canonical))
+	} else if km.K <= MaxK128Bits {
+		km.Counter = append(km.Counter, NewKCount64(km.K, km.Canonical))
 	} else {
-		return errors.New("value of K is too high (maximal supported value is 31)")
+		return errors.New("value of K is too high (maximal supported value is 64)")
 	}
 
 	// Count kmers
@@ -111,8 +113,12 @@ func (km *Kmer) MergeKmers() error {
 			if km.K <= MaxK64Bits {
 				kunion = make([][]uint64, 1)
 				kunion[0] = make([]uint64, 0)
+			} else if km.K <= MaxK128Bits {
+				kunion = make([][]uint64, 2)
+				kunion[0] = make([]uint64, 0)
+				kunion[1] = make([]uint64, 0)
 			} else {
-				return errors.New("value of K is too high (maximal supported value is 31)")
+				return errors.New("value of K is too high (maximal supported value is 64)")
 			}
 			kl := NewKLabel(km.K)
 			for i := range len(km.Counter) {
