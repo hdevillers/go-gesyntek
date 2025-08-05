@@ -385,6 +385,13 @@ func (gsk *GeSynteK) MergeKmers() error {
 			UpLab[0] = make([]uint64, 0)
 			DoLab = make([][]uint64, 1)
 			DoLab[0] = make([]uint64, 0)
+		} else if gsk.KmerLen <= kmer.MaxK128Bits {
+			UpLab = make([][]uint64, 2)
+			UpLab[0] = make([]uint64, 0)
+			UpLab[1] = make([]uint64, 0)
+			DoLab = make([][]uint64, 2)
+			DoLab[0] = make([]uint64, 0)
+			DoLab[1] = make([]uint64, 0)
 		} else {
 			return errors.New("unsupported kmer value (too high) for merging")
 		}
